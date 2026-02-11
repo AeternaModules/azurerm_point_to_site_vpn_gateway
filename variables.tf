@@ -34,10 +34,10 @@ EOT
     virtual_hub_id                      = string
     vpn_server_configuration_id         = string
     dns_servers                         = optional(list(string))
-    routing_preference_internet_enabled = optional(bool, false)
+    routing_preference_internet_enabled = optional(bool) # Default: false
     tags                                = optional(map(string))
     connection_configuration = object({
-      internet_security_enabled = optional(bool, false)
+      internet_security_enabled = optional(bool) # Default: false
       name                      = string
       route = optional(object({
         associated_route_table_id = string
