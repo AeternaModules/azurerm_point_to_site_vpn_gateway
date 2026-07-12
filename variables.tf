@@ -36,7 +36,7 @@ EOT
     dns_servers                         = optional(list(string))
     routing_preference_internet_enabled = optional(bool) # Default: false
     tags                                = optional(map(string))
-    connection_configuration = object({
+    connection_configuration = list(object({
       internet_security_enabled = optional(bool) # Default: false
       name                      = string
       route = optional(object({
@@ -51,44 +51,15 @@ EOT
       vpn_client_address_pool = object({
         address_prefixes = set(string)
       })
-    })
+    }))
   }))
-  validation {
-    condition = alltrue([
-      for k, v in var.point_to_site_vpn_gateways : (
-        length(v.name) > 0
-      )
-    ])
-    error_message = "must not be empty"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.point_to_site_vpn_gateways : (
-        length(v.connection_configuration.name) > 0
-      )
-    ])
-    error_message = "must not be empty"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.point_to_site_vpn_gateways : (
-        v.connection_configuration.route == null || (v.connection_configuration.route.propagated_route_table == null || (v.connection_configuration.route.propagated_route_table.labels == null || (length(v.connection_configuration.route.propagated_route_table.labels) > 0)))
-      )
-    ])
-    error_message = "must not be empty"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.point_to_site_vpn_gateways : (
-        v.scale_unit >= 0
-      )
-    ])
-    error_message = "must be at least 0"
-  }
   # --- Unconfirmed validation candidates, derived from azurerm_point_to_site_vpn_gateway's provider source ---
   # Not auto-enabled: either a bespoke provider validator we can't safely translate,
   # or a path that crosses a list-typed block (needs its own for_each wrapping).
   # Review, translate into a real validation{} block above, and delete once confirmed.
+  # path: name
+  #   condition: length(value) > 0
+  #   message:   must not be empty
   # path: resource_group_name
   #   condition: length(value) <= 90
   #   message:   [from resourcegroups.ValidateName: invalid when len(value) > 90]
@@ -113,6 +84,9 @@ EOT
   #   source:    [from virtualwans.ValidateVpnServerConfigurationID] !ok
   # path: vpn_server_configuration_id
   #   source:    [from virtualwans.ValidateVpnServerConfigurationID] err != nil
+  # path: connection_configuration.name
+  #   condition: length(value) > 0
+  #   message:   must not be empty
   # path: connection_configuration.vpn_client_address_pool.address_prefixes[*]
   #   source:    [from validate.CIDR] re != nil && !re.MatchString(cidr)
   # path: connection_configuration.route.associated_route_table_id
@@ -131,6 +105,12 @@ EOT
   #   source:    [from virtualwans.ValidateHubRouteTableID] !ok
   # path: connection_configuration.route.propagated_route_table.ids[*]
   #   source:    [from virtualwans.ValidateHubRouteTableID] err != nil
+  # path: connection_configuration.route.propagated_route_table.labels[*]
+  #   condition: length(value) > 0
+  #   message:   must not be empty
+  # path: scale_unit
+  #   condition: value >= 0
+  #   message:   must be at least 0
   # path: dns_servers[*]
   #   source:    validation.IsIPv4Address(...) - no translation rule yet, add one
   # path: tags
