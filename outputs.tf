@@ -1,3 +1,7 @@
+output "point_to_site_vpn_gateways_id" {
+  description = "Map of id values across all point_to_site_vpn_gateways, keyed the same as var.point_to_site_vpn_gateways"
+  value       = { for k, v in azurerm_point_to_site_vpn_gateway.point_to_site_vpn_gateways : k => v.id }
+}
 output "point_to_site_vpn_gateways_connection_configuration" {
   description = "Map of connection_configuration values across all point_to_site_vpn_gateways, keyed the same as var.point_to_site_vpn_gateways"
   value       = { for k, v in azurerm_point_to_site_vpn_gateway.point_to_site_vpn_gateways : k => v.connection_configuration }
