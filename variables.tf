@@ -34,10 +34,10 @@ EOT
     virtual_hub_id                      = string
     vpn_server_configuration_id         = string
     dns_servers                         = optional(list(string))
-    routing_preference_internet_enabled = optional(bool) # Default: false
+    routing_preference_internet_enabled = optional(bool)
     tags                                = optional(map(string))
     connection_configuration = list(object({
-      internet_security_enabled = optional(bool) # Default: false
+      internet_security_enabled = optional(bool)
       name                      = string
       route = optional(object({
         associated_route_table_id = string
@@ -53,6 +53,14 @@ EOT
       })
     }))
   }))
+  validation {
+    condition = alltrue([
+      for k, v in var.point_to_site_vpn_gateways : (
+        length(v.connection_configuration) >= 1
+      )
+    ])
+    error_message = "Each connection_configuration list must contain at least 1 items"
+  }
   # --- Unconfirmed validation candidates, derived from azurerm_point_to_site_vpn_gateway's provider source ---
   # Not auto-enabled: either a bespoke provider validator we can't safely translate,
   # or a path that crosses a list-typed block (needs its own for_each wrapping).
